@@ -1,71 +1,96 @@
 # Runnable Spec Demo - iOS
 
-A demonstration iOS app showcasing the concept of "runnable specifications" - living documentation that can be executed to verify implementation correctness.
+A demonstration iOS app showcasing two powerful approaches to "runnable specifications":
+
+1. **UI Specs** - Describe user interfaces in plain text, rendered at runtime
+2. **Behavior Specs** - Executable tests as living documentation
 
 ## What are Runnable Specs?
 
-Runnable specifications are a form of executable documentation where:
-- Specifications are written in human-readable language
-- Each spec can be executed to verify the implementation
-- Results provide immediate feedback (pass/fail)
-- Documentation stays in sync with code through continuous verification
+Runnable specifications are executable documentation that bridges the gap between human-readable descriptions and working code. This demo shows two complementary approaches:
 
-This approach combines the clarity of documentation with the reliability of automated testing, creating "living documentation" that evolves with your codebase.
+### UI Specifications (Spec-Driven UI)
+Write UI descriptions in natural language that the runtime parses and renders:
+
+```
+Screen "Login"
+  VStack spacing: 20
+    Image "person.circle.fill" size: 80
+    Text "Welcome Back" style: title
+    TextField "Email" binding: "email"
+    SecureField "Password" binding: "password"
+    Button "Sign In" action: "login"
+```
+
+The runtime **parses** this specification and **generates** the actual SwiftUI interface. Edit the spec, see the UI update instantly.
+
+### Behavior Specifications (Executable Tests)
+Traditional specs that verify implementation correctness:
+- Specifications written in human-readable language
+- Each spec executes to verify the implementation
+- Results provide immediate pass/fail feedback
+- Documentation stays in sync with code
 
 ## Features
 
-### Spec Framework
-The app includes a lightweight BDD-style specification framework with:
+### UI Specification Framework
+A runtime parser and renderer that builds UIs from plain text specs:
+
+- **Human-Readable DSL**: Describe screens, buttons, text fields in natural language
+- **Runtime Parsing**: Specs are parsed on-the-fly and rendered as SwiftUI
+- **Live Editing**: Edit specs and see UI update immediately
+- **Interactive Preview**: Split-pane view with spec editor and live preview
+- **Error Handling**: Parse errors are caught and displayed clearly
+
+**Included UI Spec Examples:**
+1. Login Screen - Authentication interface
+2. Todo List - Task management UI
+3. Settings - Toggles and preferences
+4. Profile - User information display
+5. Onboarding - Welcome flow
+6. Contact Form - Data collection
+
+### Behavior Specification Framework
+A lightweight BDD-style testing framework:
+
 - **Readable DSL**: Write specs in natural language
 - **Multiple Assertion Types**: `expect()`, `expectNotNil()`, `expectThrows()`, etc.
 - **Feature Grouping**: Organize specs by feature
 - **Real-time Results**: See pass/fail status immediately
 
-### Demo Implementations
-
-The demo includes three example features:
-
-1. **Calculator** - Basic arithmetic operations
-   - Addition, subtraction, multiplication, division
-   - Error handling (division by zero)
-   - Includes one intentional bug (power function) to demonstrate failing specs
-
-2. **User Authentication** - Session management system
-   - User registration with validation
-   - Login/logout functionality
-   - Password change
-   - Includes one intentional bug (password change validation) to demonstrate failing specs
-
+**Included Behavior Examples:**
+1. **Calculator** - Arithmetic operations (includes intentional bug)
+2. **User Authentication** - Session management (includes intentional bug)
 3. **String Utilities** - String manipulation helpers
-   - String reversal
-   - Vowel counting
-   - Palindrome detection
 
 ### Interactive UI
 
-Built with SwiftUI, the app provides:
-- **Sidebar Navigation**: Browse all features and specs
-- **Individual Spec Execution**: Run specs one at a time
-- **Batch Execution**: Run all specs in a feature or entire suite
-- **Visual Feedback**: Color-coded pass/fail indicators
-- **Summary Statistics**: Track overall test coverage and results
+Built with SwiftUI, featuring:
+- **Tab-Based Navigation**: Switch between UI specs and behavior specs
+- **Live Spec Editor**: Edit UI specs and see changes instantly
+- **Split-Pane View**: Spec source on one side, rendered UI on the other
+- **Visual Feedback**: Color-coded pass/fail for behavior specs
+- **Example Gallery**: Browse 6 UI specs and 20+ behavior specs
 
 ## Project Structure
 
 ```
 RunnableSpecDemo/
-├── RunnableSpecDemo.xcodeproj/    # Xcode project file
+├── RunnableSpecDemo.xcodeproj/      # Xcode project file
 └── RunnableSpecDemo/
-    ├── RunnableSpecDemoApp.swift   # App entry point
-    ├── ContentView.swift           # Main UI
+    ├── RunnableSpecDemoApp.swift     # App entry point
+    ├── ContentView.swift             # Main UI with tabs
     ├── SpecFramework/
-    │   └── SpecFramework.swift     # Core spec framework
+    │   ├── SpecFramework.swift       # Behavior spec framework
+    │   ├── UISpecParser.swift        # UI spec parser
+    │   └── UISpecBuilder.swift       # UI spec renderer
     ├── Examples/
-    │   ├── Calculator.swift        # Example: Calculator implementation
-    │   └── UserAuth.swift          # Example: User auth implementation
+    │   ├── Calculator.swift          # Calculator implementation
+    │   └── UserAuth.swift            # User auth implementation
     ├── Specs/
-    │   └── ExampleSpecs.swift      # Runnable specifications
-    └── Assets.xcassets/            # App assets
+    │   ├── ExampleSpecs.swift        # Behavior specifications
+    │   └── UISpecs.swift             # UI specifications
+    └── Assets.xcassets/              # App assets
 ```
 
 ## How to Use
@@ -76,19 +101,49 @@ RunnableSpecDemo/
 2. Select a simulator or device (iOS 17.0+)
 3. Build and run (Cmd+R)
 
-### Navigating the Interface
+### Exploring UI Specs
 
-1. **Browse Features**: Select features from the sidebar
-2. **Run Specs**:
+1. **Browse Examples**: The app opens to the UI Specs tab showing 6 example screens
+2. **Select a Spec**: Tap any example from the sidebar to see it rendered
+3. **View Spec Source**: Click "Show Spec" to see the spec text side-by-side with the rendered UI
+4. **Edit Live**: Modify the spec text and click "Update" to see changes instantly
+5. **Experiment**: Try changing text, adding elements, or creating new layouts
+
+### Exploring Behavior Specs
+
+1. **Switch Tabs**: Tap the "Behavior Specs" tab at the bottom
+2. **Browse Features**: Select features from the sidebar
+3. **Run Specs**:
    - Click the play button next to individual specs
    - Use "Run Feature" to run all specs in a feature
    - Use "Run All" to execute the entire suite
-3. **View Results**: Green checkmarks indicate passing specs, red X marks indicate failures
-4. **Read Failure Messages**: Failed specs show detailed error messages
+4. **View Results**: Green checkmarks indicate passing specs, red X marks indicate failures
 
-## Example Spec
+## Example Specs
 
-Here's what a spec looks like in code:
+### UI Spec Example
+
+Here's what a UI spec looks like:
+
+```
+Screen "Login"
+  VStack spacing: 20
+    Image "person.circle.fill" size: 80
+    Text "Welcome Back" style: title
+    TextField "Email" binding: "email"
+    SecureField "Password" binding: "password"
+    Button "Sign In" action: "login"
+```
+
+The runtime parses this and renders:
+- A screen titled "Login"
+- A vertical stack with 20pt spacing
+- An icon, title text, input fields, and button
+- All fully interactive and styled
+
+### Behavior Spec Example
+
+Here's what a behavior spec looks like in code:
 
 ```swift
 Spec("adds two positive numbers correctly") {
@@ -104,35 +159,49 @@ And how it appears in the UI:
 
 ## Writing Your Own Specs
 
-### 1. Define a Feature
+### UI Spec Syntax
 
+**Supported Elements:**
+- `Screen "Title"` - Root element with navigation title
+- `VStack` / `HStack` - Vertical/horizontal layouts (optional `spacing: N`)
+- `Text "Content"` - Labels (optional `style: title|headline|body|caption`)
+- `TextField "Placeholder"` - Text input (requires `binding: "name"`)
+- `SecureField "Placeholder"` - Password input (requires `binding: "name"`)
+- `Button "Label"` - Buttons (optional `action: "actionName"`)
+- `Toggle "Label"` - Switches (requires `binding: "name"`)
+- `Image "system-name"` - SF Symbols (optional `size: N`)
+- `List` - Scrollable lists
+- `Spacer` - Flexible space
+- `Divider` - Separator lines
+
+**Example:**
+```
+Screen "My Screen"
+  VStack spacing: 16
+    Text "Hello World" style: title
+    Button "Click Me" action: "myAction"
+```
+
+### Behavior Spec Syntax
+
+**1. Define a Feature:**
 ```swift
 let myFeature = Feature(
     name: "My Feature",
     description: "Description of what this feature does",
-    specs: [
-        // specs go here
-    ]
+    specs: [/* specs here */]
 )
 ```
 
-### 2. Write Specs
-
+**2. Write Specs:**
 ```swift
 Spec("describes the expected behavior") {
-    // Arrange: Set up test conditions
-    let sut = SystemUnderTest()
-
-    // Act: Perform the action
-    let result = sut.doSomething()
-
-    // Assert: Verify the result
+    let result = systemUnderTest.doSomething()
     return expect(result, toEqual: expectedValue)
 }
 ```
 
-### 3. Available Assertions
-
+**3. Available Assertions:**
 - `expect(_ actual, toEqual expected)` - Equality check
 - `expect(_ condition, _ message)` - Boolean condition
 - `expectNotNil(_ value)` - Non-nil check
@@ -140,28 +209,25 @@ Spec("describes the expected behavior") {
 - `expectThrows(_ block)` - Expects error to be thrown
 - `expectNoThrow(_ block)` - Expects no error
 
-### 4. Add to Suite
-
-```swift
-func createSpecSuite() -> SpecSuite {
-    return SpecSuite(features: [
-        myFeature,
-        // ... other features
-    ])
-}
-```
-
 ## Intentional Bugs for Demo
 
-The demo includes two intentional bugs to demonstrate failing specs:
+The behavior specs include two intentional bugs to demonstrate failing specs:
 
 1. **Calculator.power()**: Doesn't handle the zero exponent case correctly
 2. **UserAuth.changePassword()**: Doesn't verify the old password before changing
 
-Try running the specs to see these failures in action!
+Try running the behavior specs to see these failures in action!
 
 ## Benefits of Runnable Specs
 
+### UI Specs
+1. **Design Without Code**: Describe UIs in plain text, no Swift required
+2. **Rapid Prototyping**: Iterate on UI designs with instant feedback
+3. **Living Documentation**: UI specs are always accurate - they ARE the UI
+4. **Version Control Friendly**: Text-based specs are easy to diff and review
+5. **Accessibility**: Non-developers can write and understand UI specs
+
+### Behavior Specs
 1. **Self-Documenting Code**: Specs serve as both tests and documentation
 2. **Immediate Verification**: Run specs anytime to verify correctness
 3. **Behavior-Driven**: Focus on what the code should do, not how
@@ -180,7 +246,8 @@ This is a demonstration project for educational purposes.
 
 ## Learn More
 
-For more on runnable specifications and behavior-driven development:
+For more on runnable specifications and related concepts:
 - [Specification by Example](https://en.wikipedia.org/wiki/Specification_by_example)
 - [Behavior-Driven Development](https://en.wikipedia.org/wiki/Behavior-driven_development)
 - [Living Documentation](https://www.thoughtworks.com/insights/blog/living-documentation)
+- [Declarative UI](https://en.wikipedia.org/wiki/Declarative_programming)

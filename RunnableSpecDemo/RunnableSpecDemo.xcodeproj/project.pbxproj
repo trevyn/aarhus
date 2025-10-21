@@ -14,6 +14,9 @@
 		1A000009000000000000001 /* Calculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000A000000000000001 /* Calculator.swift */; };
 		1A00000B000000000000001 /* UserAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000C000000000000001 /* UserAuth.swift */; };
 		1A00000D000000000000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1A00000E000000000000001 /* Assets.xcassets */; };
+		1A000021000000000000001 /* UISpecParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000022000000000000001 /* UISpecParser.swift */; };
+		1A000023000000000000001 /* UISpecBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000024000000000000001 /* UISpecBuilder.swift */; };
+		1A000025000000000000001 /* UISpecs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000026000000000000001 /* UISpecs.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +28,9 @@
 		1A00000A000000000000001 /* Calculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Calculator.swift; sourceTree = "<group>"; };
 		1A00000C000000000000001 /* UserAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAuth.swift; sourceTree = "<group>"; };
 		1A00000E000000000000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1A000022000000000000001 /* UISpecParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UISpecParser.swift; sourceTree = "<group>"; };
+		1A000024000000000000001 /* UISpecBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UISpecBuilder.swift; sourceTree = "<group>"; };
+		1A000026000000000000001 /* UISpecs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UISpecs.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,6 +77,8 @@
 			isa = PBXGroup;
 			children = (
 				1A000006000000000000001 /* SpecFramework.swift */,
+				1A000022000000000000001 /* UISpecParser.swift */,
+				1A000024000000000000001 /* UISpecBuilder.swift */,
 			);
 			path = SpecFramework;
 			sourceTree = "<group>";
@@ -88,6 +96,7 @@
 			isa = PBXGroup;
 			children = (
 				1A000008000000000000001 /* ExampleSpecs.swift */,
+				1A000026000000000000001 /* UISpecs.swift */,
 			);
 			path = Specs;
 			sourceTree = "<group>";
@@ -167,6 +176,9 @@
 				1A000007000000000000001 /* ExampleSpecs.swift in Sources */,
 				1A000009000000000000001 /* Calculator.swift in Sources */,
 				1A00000B000000000000001 /* UserAuth.swift in Sources */,
+				1A000021000000000000001 /* UISpecParser.swift in Sources */,
+				1A000023000000000000001 /* UISpecBuilder.swift in Sources */,
+				1A000025000000000000001 /* UISpecs.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
