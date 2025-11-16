@@ -1,0 +1,6 @@
+*.agdai
+.*.sw*
+*~
+.DS_Store
+MAlonzo/**
+*.pyc
