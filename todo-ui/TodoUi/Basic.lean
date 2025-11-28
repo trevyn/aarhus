@@ -256,13 +256,24 @@ theorem horizontalStack_disjoint (x1 x2 y w1 h1 w2 h2 : Nat)
   exact hGap
 
 /-- Our item layout: each item is at y = 50 + idx * 30, height 25.
-    Gap of 5 pixels between items. -/
+    Gap of 5 pixels between items.
+
+    This is a "real" mathematical proof, not just native_decide:
+    - We apply the vertical gap theorem
+    - Then prove: (50 + i*30) + 25 ≤ 50 + j*30
+    - Which simplifies to: i*30 + 25 ≤ j*30
+    - Since i < j, we have j ≥ i+1, so j*30 ≥ i*30 + 30 > i*30 + 25 ✓
+-/
 theorem todoItems_noOverlap (i j : Nat) (hi : i < j) :
     Bounds.disjoint
       (mkBounds itemX (itemStartY + i * itemHeight) 300 25)
       (mkBounds itemX (itemStartY + j * itemHeight) 300 25) := by
   apply Bounds.disjoint_if_vertical_gap
-  simp [mkBounds, Bounds.bottom, itemStartY, itemHeight]
+  simp only [mkBounds, Bounds.bottom, itemStartY, itemHeight]
+  -- Goal: 50 + i * 30 + 25 ≤ 50 + j * 30
+  -- i.e.: i * 30 + 25 ≤ j * 30
+  -- Since hi : i < j, we have j ≥ i + 1
+  -- So j * 30 ≥ (i + 1) * 30 = i * 30 + 30 > i * 30 + 25
   omega
 
 /-- Title is above all todo items -/
@@ -273,6 +284,37 @@ theorem title_above_items (idx : Nat) :
   apply Bounds.disjoint_if_vertical_gap
   simp [mkBounds, Bounds.bottom, titleY, itemStartY, itemHeight]
   omega
+
+/-! ## Proof Style Comparison
+
+Showing different ways to prove the same thing:
+-/
+
+-- Style 1: native_decide (just compute it)
+example : Bounds.disjoint (mkBounds 0 0 100 25) (mkBounds 0 30 100 25) := by
+  native_decide
+
+-- Style 2: decide (compute in kernel, more trusted)
+example : Bounds.disjoint (mkBounds 0 0 100 25) (mkBounds 0 30 100 25) := by
+  decide
+
+-- Style 3: Apply theorem + omega (builds proof term for arithmetic)
+example : Bounds.disjoint (mkBounds 0 0 100 25) (mkBounds 0 30 100 25) := by
+  apply Bounds.disjoint_if_vertical_gap
+  simp only [mkBounds, Bounds.bottom]
+  omega  -- proves 0 + 25 ≤ 30
+
+-- Style 4: Fully explicit proof (no automation)
+example : Bounds.disjoint (mkBounds 0 0 100 25) (mkBounds 0 30 100 25) := by
+  apply Bounds.disjoint_if_vertical_gap
+  simp only [mkBounds, Bounds.bottom]
+  -- Goal: 0 + 25 ≤ 30
+  -- This is just: 25 ≤ 30
+  exact Nat.le_of_lt (Nat.lt_of_lt_of_le (by decide : 25 < 26) (by decide : 26 ≤ 30))
+
+-- Style 5: Term-mode proof (no tactics at all!)
+example : Bounds.disjoint (mkBounds 0 0 100 25) (mkBounds 0 30 100 25) :=
+  Bounds.disjoint_if_vertical_gap _ _ (by simp [mkBounds, Bounds.bottom])
 
 /-! ## Compile-Time Tests
 
