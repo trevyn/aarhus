@@ -48,6 +48,41 @@ structure TodoListUI where
   windowBounds : Bounds
 deriving Repr, Inhabited
 
+/-! ## Text Fitting Model
+
+We model text rendering to prove text doesn't overflow bounds.
+Assumes monospace font with configurable character width.
+-/
+
+/-- Font metrics for text measurement -/
+structure FontMetrics where
+  charWidth : Nat      -- pixels per character
+  lineHeight : Nat     -- pixels per line
+deriving Repr, Inhabited
+
+/-- Default monospace font: 8px wide, 16px tall -/
+def defaultFont : FontMetrics := { charWidth := 8, lineHeight := 16 }
+
+/-- Calculate pixel width of a string -/
+def textWidth (font : FontMetrics) (s : String) : Nat :=
+  s.length * font.charWidth
+
+/-- Extra width needed for UI chrome (checkbox, padding, etc.) -/
+def chromeWidth (kind : UIElementKind) : Nat :=
+  match kind with
+  | .checkbox _ => 30  -- "[ ] " prefix
+  | .button => 20      -- padding
+  | .label => 10       -- padding
+  | .textInput => 20   -- padding + cursor
+  | .panel => 0
+
+/-- Check if text fits within element bounds -/
+def textFits (font : FontMetrics) (elem : UIElement) : Prop :=
+  textWidth font elem.content + chromeWidth elem.kind ≤ elem.bounds.size.width
+
+instance : Decidable (textFits font elem) :=
+  inferInstanceAs (Decidable (_ ≤ _))
+
 namespace Position
 
 def toString (p : Position) : String :=
@@ -407,6 +442,56 @@ example : ¬Bounds.disjoint
     (mkBounds itemX 220 140 30)    -- Clear button at SAME x (bad!)
   := by native_decide
 
+/-! ### Text Fitting Tests
+
+Prove that text content fits within element bounds.
+Uses 8px monospace font model.
+-/
+
+-- Helper to create a test element
+def testElem (kind : UIElementKind) (width : Nat) (text : String) : UIElement :=
+  { kind := kind
+    bounds := { pos := { x := 0, y := 0 }, size := { width := width, height := 25 } }
+    content := text }
+
+-- Test 15: "Buy groceries" (13 chars) fits in checkbox (width 300)
+-- 13 * 8 + 30 = 134 ≤ 300 ✓
+example : textFits defaultFont (testElem (.checkbox false) 300 "Buy groceries") := by
+  native_decide
+
+-- Test 16: "Add Task" (8 chars) fits in button (width 100)
+-- 8 * 8 + 20 = 84 ≤ 100 ✓
+example : textFits defaultFont (testElem .button 100 "Add Task") := by
+  native_decide
+
+-- Test 17: "My Todo List" (12 chars) fits in label (width 200)
+-- 12 * 8 + 10 = 106 ≤ 200 ✓
+example : textFits defaultFont (testElem .label 200 "My Todo List") := by
+  native_decide
+
+-- Test 18: Longest sample item "Review pull request" (19 chars) fits
+-- 19 * 8 + 30 = 182 ≤ 300 ✓
+example : textFits defaultFont (testElem (.checkbox false) 300 "Review pull request") := by
+  native_decide
+
+-- Test 19: NEGATIVE - Text that's too long does NOT fit
+-- "This is a very long todo item that won't fit" (45 chars)
+-- 45 * 8 + 30 = 390 > 300 ✗
+example : ¬textFits defaultFont (testElem (.checkbox false) 300 "This is a very long todo item that won't fit") := by
+  native_decide
+
+-- Test 20: Edge case - exactly at the limit
+-- "exactly thirty three chars!!" (28 chars) in width 254
+-- 28 * 8 + 30 = 254 ≤ 254 ✓ (just fits!)
+example : textFits defaultFont (testElem (.checkbox false) 254 "exactly thirty three chars!!") := by
+  native_decide
+
+-- Test 21: Edge case - one pixel too wide
+-- Same text in width 253
+-- 28 * 8 + 30 = 254 > 253 ✗
+example : ¬textFits defaultFont (testElem (.checkbox false) 253 "exactly thirty three chars!!") := by
+  native_decide
+
 end CompileTimeTests
 
 /-- Render the complete UI to text output -/
@@ -453,14 +538,47 @@ def clearCompleted (ui : TodoListUI) : TodoListUI :=
 
 /-! ## Compile-Time Layout Verification
 
-Prove at compile time that actual layouts have no overlaps.
+Prove at compile time that actual layouts have no overlaps AND text fits.
 This replaces runtime checking entirely for known layouts.
 -/
+
+/-- Check if all elements in a list have text that fits -/
+def allTextFits (font : FontMetrics) : List UIElement → Bool
+  | [] => true
+  | e :: es => decide (textFits font e) && allTextFits font es
 
 /-- Proof: The sample todo list layout has no overlapping elements.
     This is verified at compile time - if layout changes break it, compilation fails. -/
 theorem sample_layout_noOverlaps : checkNoOverlaps sample.layout = true := by
   native_decide
+
+/-- Proof: All text in sample layout fits within bounds -/
+theorem sample_layout_textFits : allTextFits defaultFont sample.layout = true := by
+  native_decide
+
+/-- Mathematical proof: Any text ≤ 33 chars fits in a 300px checkbox.
+
+    Proof:
+    - textWidth = length * 8
+    - chromeWidth(.checkbox) = 30
+    - Total = length * 8 + 30
+    - For length ≤ 33: 33 * 8 + 30 = 294 ≤ 300 ✓
+
+    This is a universal proof - works for ANY text up to 33 chars!
+-/
+theorem checkbox_text_fits_if_short (text : String) (h : text.length ≤ 33) :
+    textFits defaultFont (testElem (.checkbox false) 300 text) := by
+  unfold textFits textWidth chromeWidth defaultFont testElem
+  simp only
+  -- Goal: text.length * 8 + 30 ≤ 300
+  -- From h: text.length ≤ 33
+  -- So: text.length * 8 ≤ 33 * 8 = 264
+  -- Thus: text.length * 8 + 30 ≤ 264 + 30 = 294 ≤ 300
+  omega
+
+/-- Corollary: All our sample items are ≤ 33 chars, so they definitely fit -/
+theorem sample_items_fit :
+    ∀ item ∈ sample.items, item.text.length ≤ 33 := by native_decide
 
 /-- Empty layout has no overlaps -/
 theorem empty_layout_noOverlaps : checkNoOverlaps ({ sample with items := [] }.layout) = true := by
