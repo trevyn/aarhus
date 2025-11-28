@@ -1,0 +1,10 @@
+name = "todo-ui"
+version = "0.1.0"
+defaultTargets = ["todo-ui"]
+
+[[lean_lib]]
+name = "TodoUi"
+
+[[lean_exe]]
+name = "todo-ui"
+root = "Main"
