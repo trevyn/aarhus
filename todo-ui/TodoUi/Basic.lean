@@ -274,6 +274,50 @@ theorem title_above_items (idx : Nat) :
   simp [mkBounds, Bounds.bottom, titleY, itemStartY, itemHeight]
   omega
 
+/-! ## Compile-Time Tests
+
+These are verified at compile time. If any fail, the file won't compile.
+-/
+
+section CompileTimeTests
+
+-- Test 1: Concrete bounds that should be disjoint (vertical gap)
+example : Bounds.disjoint (mkBounds 0 0 100 50) (mkBounds 0 60 100 50) := by
+  native_decide
+
+-- Test 2: Concrete bounds that should be disjoint (horizontal gap)
+example : Bounds.disjoint (mkBounds 0 0 50 100) (mkBounds 60 0 50 100) := by
+  native_decide
+
+-- Test 3: Verify specific todo items don't overlap (items 0 and 1)
+example : Bounds.disjoint
+    (mkBounds itemX (itemStartY + 0 * itemHeight) 300 25)
+    (mkBounds itemX (itemStartY + 1 * itemHeight) 300 25) := by
+  native_decide
+
+-- Test 4: Verify title doesn't overlap first item
+example : Bounds.disjoint
+    (mkBounds itemX titleY 200 30)
+    (mkBounds itemX itemStartY 300 25) := by
+  native_decide
+
+-- Test 5: The two buttons are horizontally separated
+example : Bounds.disjoint
+    (mkBounds itemX 220 100 30)           -- Add Task button
+    (mkBounds (itemX + 120) 220 140 30) := by  -- Clear Completed button
+  native_decide
+
+-- Test 6: Verify overlapping bounds are NOT disjoint (sanity check)
+-- This proves our overlap detection actually works
+example : Bounds.overlaps (mkBounds 0 0 100 100) (mkBounds 50 50 100 100) = true := by
+  native_decide
+
+-- Test 7: Adjacent bounds (touching but not overlapping) are disjoint
+example : Bounds.disjoint (mkBounds 0 0 100 100) (mkBounds 100 0 100 100) := by
+  native_decide
+
+end CompileTimeTests
+
 /-- Render the complete UI to text output -/
 def render (ui : TodoListUI) : String :=
   let elements := ui.layout
