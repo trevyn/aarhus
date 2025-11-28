@@ -409,6 +409,31 @@ def toggleItem (ui : TodoListUI) (itemId : Nat) : TodoListUI :=
 def clearCompleted (ui : TodoListUI) : TodoListUI :=
   { ui with items := ui.items.filter (!·.completed) }
 
+/-! ## Compile-Time Layout Verification
+
+Prove at compile time that actual layouts have no overlaps.
+This replaces runtime checking entirely for known layouts.
+-/
+
+/-- Proof: The sample todo list layout has no overlapping elements.
+    This is verified at compile time - if layout changes break it, compilation fails. -/
+theorem sample_layout_noOverlaps : checkNoOverlaps sample.layout = true := by
+  native_decide
+
+/-- Empty layout has no overlaps -/
+theorem empty_layout_noOverlaps : checkNoOverlaps ({ sample with items := [] }.layout) = true := by
+  native_decide
+
+/-- Single item layout has no overlaps -/
+theorem single_item_layout_noOverlaps :
+    checkNoOverlaps ({ sample with items := [⟨1, "task", false⟩] }.layout) = true := by
+  native_decide
+
+/-- Two item layout has no overlaps -/
+theorem two_item_layout_noOverlaps :
+    checkNoOverlaps ({ sample with items := [⟨1, "a", false⟩, ⟨2, "b", true⟩] }.layout) = true := by
+  native_decide
+
 end TodoListUI
 
 -- Export for Main
