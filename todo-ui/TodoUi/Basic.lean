@@ -64,6 +64,41 @@ def toString (b : Bounds) : String :=
 
 instance : ToString Bounds := ⟨Bounds.toString⟩
 
+/-- Right edge x-coordinate -/
+def right (b : Bounds) : Nat := b.pos.x + b.size.width
+
+/-- Bottom edge y-coordinate -/
+def bottom (b : Bounds) : Nat := b.pos.y + b.size.height
+
+/-- Check if two 1D intervals overlap: [a1, a2) and [b1, b2) -/
+def intervalsOverlap (a1 a2 b1 b2 : Nat) : Bool :=
+  a1 < b2 && b1 < a2
+
+/-- Check if two bounds overlap (have non-empty intersection) -/
+def overlaps (b1 b2 : Bounds) : Bool :=
+  intervalsOverlap b1.pos.x b1.right b2.pos.x b2.right &&
+  intervalsOverlap b1.pos.y b1.bottom b2.pos.y b2.bottom
+
+/-- Two bounds are disjoint (do not overlap) -/
+def disjoint (b1 b2 : Bounds) : Prop := overlaps b1 b2 = false
+
+instance : Decidable (disjoint b1 b2) :=
+  inferInstanceAs (Decidable (overlaps b1 b2 = false))
+
+/-- Proof: if b2 starts at or after b1 ends vertically, they're disjoint -/
+theorem disjoint_if_vertical_gap (b1 b2 : Bounds)
+    (h : b1.bottom ≤ b2.pos.y) : disjoint b1 b2 := by
+  unfold disjoint overlaps intervalsOverlap bottom right
+  have hNotLt : ¬(b2.pos.y < b1.pos.y + b1.size.height) := Nat.not_lt.mpr h
+  simp [hNotLt]
+
+/-- Proof: if b2 starts at or after b1 ends horizontally, they're disjoint -/
+theorem disjoint_if_horizontal_gap (b1 b2 : Bounds)
+    (h : b1.right ≤ b2.pos.x) : disjoint b1 b2 := by
+  unfold disjoint overlaps intervalsOverlap right bottom
+  have hNotLt : ¬(b2.pos.x < b1.pos.x + b1.size.width) := Nat.not_lt.mpr h
+  simp [hNotLt]
+
 end Bounds
 
 namespace UIElementKind
@@ -101,7 +136,37 @@ def render (elem : UIElement) : String :=
 
 instance : ToString UIElement := ⟨UIElement.render⟩
 
+/-- Two UI elements are disjoint if their bounds don't overlap -/
+def disjoint (e1 e2 : UIElement) : Prop := Bounds.disjoint e1.bounds e2.bounds
+
+instance : Decidable (disjoint e1 e2) :=
+  inferInstanceAs (Decidable (Bounds.disjoint e1.bounds e2.bounds))
+
 end UIElement
+
+/-- Check if element e is disjoint from all elements in a list -/
+def disjointFromAll (e : UIElement) : List UIElement → Bool
+  | [] => true
+  | e' :: es => !Bounds.overlaps e.bounds e'.bounds && disjointFromAll e es
+
+/-- Check if all UI elements in a list are pairwise disjoint (computable) -/
+def checkNoOverlaps : List UIElement → Bool
+  | [] => true
+  | e :: es => disjointFromAll e es && checkNoOverlaps es
+
+/-- All pairs of elements in a list are disjoint (propositional version) -/
+def AllPairwiseDisjoint (elements : List UIElement) : Prop :=
+  checkNoOverlaps elements = true
+
+/-- Get all overlapping pairs (for debugging) -/
+def findOverlaps (elements : List UIElement) : List (UIElement × UIElement) :=
+  let rec collectPairs : List UIElement → List (UIElement × UIElement)
+    | [] => []
+    | e1 :: rest =>
+      let overlapsWithE1 := rest.filterMap fun e2 =>
+        if Bounds.overlaps e1.bounds e2.bounds then some (e1, e2) else none
+      overlapsWithE1 ++ collectPairs rest
+  collectPairs elements
 
 namespace TodoListUI
 
@@ -167,6 +232,47 @@ def layout (ui : TodoListUI) : List UIElement :=
   }
 
   [titleElem] ++ itemElems ++ [addButton, clearButton, inputField]
+
+/-! ## Layout Proofs -/
+
+/-- Helper: create a bounds at given position -/
+def mkBounds (x y w h : Nat) : Bounds :=
+  { pos := { x := x, y := y }, size := { width := w, height := h } }
+
+/-- Theorem: Two vertically stacked elements with gap ≥ height don't overlap -/
+theorem verticalStack_disjoint (y1 y2 h1 w1 w2 h2 x : Nat)
+    (hGap : y1 + h1 ≤ y2) :
+    Bounds.disjoint (mkBounds x y1 w1 h1) (mkBounds x y2 w2 h2) := by
+  apply Bounds.disjoint_if_vertical_gap
+  simp [mkBounds, Bounds.bottom]
+  exact hGap
+
+/-- Theorem: Two horizontally adjacent elements with gap don't overlap -/
+theorem horizontalStack_disjoint (x1 x2 y w1 h1 w2 h2 : Nat)
+    (hGap : x1 + w1 ≤ x2) :
+    Bounds.disjoint (mkBounds x1 y w1 h1) (mkBounds x2 y w2 h2) := by
+  apply Bounds.disjoint_if_horizontal_gap
+  simp [mkBounds, Bounds.right]
+  exact hGap
+
+/-- Our item layout: each item is at y = 50 + idx * 30, height 25.
+    Gap of 5 pixels between items. -/
+theorem todoItems_noOverlap (i j : Nat) (hi : i < j) :
+    Bounds.disjoint
+      (mkBounds itemX (itemStartY + i * itemHeight) 300 25)
+      (mkBounds itemX (itemStartY + j * itemHeight) 300 25) := by
+  apply Bounds.disjoint_if_vertical_gap
+  simp [mkBounds, Bounds.bottom, itemStartY, itemHeight]
+  omega
+
+/-- Title is above all todo items -/
+theorem title_above_items (idx : Nat) :
+    Bounds.disjoint
+      (mkBounds itemX titleY 200 30)
+      (mkBounds itemX (itemStartY + idx * itemHeight) 300 25) := by
+  apply Bounds.disjoint_if_vertical_gap
+  simp [mkBounds, Bounds.bottom, titleY, itemStartY, itemHeight]
+  omega
 
 /-- Render the complete UI to text output -/
 def render (ui : TodoListUI) : String :=
