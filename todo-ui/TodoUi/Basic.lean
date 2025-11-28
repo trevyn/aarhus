@@ -316,6 +316,55 @@ example : Bounds.overlaps (mkBounds 0 0 100 100) (mkBounds 50 50 100 100) = true
 example : Bounds.disjoint (mkBounds 0 0 100 100) (mkBounds 100 0 100 100) := by
   native_decide
 
+/-! ### Negative Tests (Proving things are NOT disjoint)
+
+These prove that overlapping bounds CANNOT be proven disjoint.
+If our disjoint definition were wrong (e.g., always true), these would fail.
+-/
+
+-- Test 8: PROVE that overlapping bounds are NOT disjoint
+-- This is the key negative test - it would fail if `disjoint` were trivially true
+example : ¬Bounds.disjoint (mkBounds 0 0 100 100) (mkBounds 50 50 100 100) := by
+  native_decide
+
+-- Test 9: Partially overlapping bounds (just corners touching interior)
+example : ¬Bounds.disjoint (mkBounds 0 0 100 100) (mkBounds 99 99 100 100) := by
+  native_decide
+
+-- Test 10: One box completely inside another
+example : ¬Bounds.disjoint (mkBounds 0 0 200 200) (mkBounds 50 50 50 50) := by
+  native_decide
+
+-- Test 11: Same bounds (obviously overlap with themselves)
+example : ¬Bounds.disjoint (mkBounds 10 10 50 50) (mkBounds 10 10 50 50) := by
+  native_decide
+
+-- Test 12: If we made items overlap (height 35 > gap of 30), prove they'd conflict
+-- This shows that if we had a bug in layout, we'd catch it
+example : ¬Bounds.disjoint
+    (mkBounds 0 0 100 35)   -- height 35
+    (mkBounds 0 30 100 35)  -- starts at y=30, but previous ends at y=35
+  := by native_decide
+
+/-! ### Layout Invariant Tests
+
+Verify that changing layout constants in bad ways would break our proofs.
+-/
+
+-- Test 13: Our actual layout has itemHeight=30, item height=25, giving 5px gap.
+-- Prove that if item height EXCEEDED spacing, consecutive items would overlap
+-- (height 31 > spacing 30 means item 0 at y=50 ends at y=81, item 1 starts at y=80)
+example : ¬Bounds.disjoint
+    (mkBounds itemX itemStartY 300 (itemHeight + 1))  -- item 0 with height > spacing (bad!)
+    (mkBounds itemX (itemStartY + itemHeight) 300 (itemHeight + 1))  -- item 1
+  := by native_decide
+
+-- Test 14: Verify the buttons WOULD overlap if we didn't offset the second one
+example : ¬Bounds.disjoint
+    (mkBounds itemX 220 100 30)    -- Add Task button
+    (mkBounds itemX 220 140 30)    -- Clear button at SAME x (bad!)
+  := by native_decide
+
 end CompileTimeTests
 
 /-- Render the complete UI to text output -/
