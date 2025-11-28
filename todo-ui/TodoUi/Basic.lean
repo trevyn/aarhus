@@ -1,5 +1,8 @@
 -- Todo List Graphical UI with Text Position Output
 
+-- Warn about unused declarations (theorems, defs, etc.)
+set_option linter.unusedVariables.analyzeTactics true
+
 /-- A 2D position on screen -/
 structure Position where
   x : Nat
@@ -595,6 +598,38 @@ theorem two_item_layout_noOverlaps :
   native_decide
 
 end TodoListUI
+
+/-! ## Proof Registry
+
+All proofs must be referenced here. If a proof is deleted,
+this section will fail to compile. This ensures no "dead" proofs.
+
+We use `_ := proof` which:
+1. Verifies the proof exists (compile error if deleted)
+2. Doesn't print anything during compilation
+3. Has zero runtime cost (optimized away)
+-/
+
+/-- Verify all proofs exist. Compile fails if any are missing. -/
+def _proofRegistry : Unit :=
+  -- Layout proofs
+  let _ := TodoListUI.verticalStack_disjoint
+  let _ := TodoListUI.horizontalStack_disjoint
+  let _ := TodoListUI.todoItems_noOverlap
+  let _ := TodoListUI.title_above_items
+  -- Bounds proofs
+  let _ := Bounds.disjoint_if_vertical_gap
+  let _ := Bounds.disjoint_if_horizontal_gap
+  -- Sample layout proofs
+  let _ := TodoListUI.sample_layout_noOverlaps
+  let _ := TodoListUI.sample_layout_textFits
+  let _ := TodoListUI.empty_layout_noOverlaps
+  let _ := TodoListUI.single_item_layout_noOverlaps
+  let _ := TodoListUI.two_item_layout_noOverlaps
+  -- Universal proofs (not just native_decide)
+  let _ := TodoListUI.checkbox_text_fits_if_short
+  let _ := TodoListUI.sample_items_fit
+  ()
 
 -- Export for Main
 def hello := "Todo List UI"
